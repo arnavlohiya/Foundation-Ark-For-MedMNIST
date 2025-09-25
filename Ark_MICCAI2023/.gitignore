@@ -1,0 +1,107 @@
+# ===================================================================
+# ARK MedMNIST .gitignore
+# Excludes large files, outputs, and system files from Git
+# ===================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# PyTorch
+*.pth
+*.pt
+*.ckpt
+
+# Data files (too large for Git)
+*.npz
+*.npy
+*.h5
+*.hdf5
+data/
+datasets/
+dataset/
+*.jpg
+*.jpeg
+*.png
+*.tiff
+*.dicom
+*.dcm
+*.csv
+
+# Training outputs
+logs/
+outputs/
+checkpoints/
+results/
+runs/
+tensorboard/
+wandb/
+
+# SLURM outputs
+slurm-*.out
+slurm-*.err
+*.out
+*.err
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Configuration files with sensitive data
+config_local.yaml
+secrets.yaml
+
+# Large model files
+*.bin
+*.safetensors
