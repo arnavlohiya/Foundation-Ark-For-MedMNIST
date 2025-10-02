@@ -9,8 +9,9 @@ from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from torch.utils.data.dataset import Dataset
 import numpy as np
-# MEDMNIST MODIFICATION: Add numpy support for MedMNIST NPZ files
-# MedMNIST datasets store images and labels in NPZ format instead of separate files
+# MEDMNIST MODIFICATION: Import official MedMNIST library for proper data loading
+import medmnist
+from medmnist import INFO
 import pydicom as dicom
 import cv2
 from skimage import transform, io, img_as_float, exposure
@@ -527,57 +528,104 @@ class MIMIC(Dataset):
 
 class BaseMedMNIST(Dataset):
     """
-    Base class for all MedMNIST datasets
+    Base class for all MedMNIST datasets using official MedMNIST library
     
-    MedMNIST datasets are stored as NPZ files containing:
-    - images: numpy array of shape (N, 28, 28) or (N, 28, 28, 3)
-    - labels: numpy array with different formats based on task type
+    This class provides proper train/val/test splits and handles different task types
+    automatically using the official MedMNIST library.
     
     Args:
-        npz_file: Path to the NPZ file containing images and labels
+        dataset_name: Name of MedMNIST dataset (e.g., 'PathMNIST', 'ChestMNIST')
+        images_path: Path to data directory (for compatibility with ARK interface)
+        file_path: File path containing split information (train_list, val_list, test_list)
         augment: Augmentation transforms (from torchvision)
-        task_type: Type of task ('binary', 'multi-class', 'multi-label', 'ordinal')
-        num_classes: Number of classes for the dataset
+        size: Image size, default 224 to match ARK's expected input
+        download: Whether to download dataset if not found
     """
-    def __init__(self, images_path, file_path, augment, task_type='multi-class', num_classes=2):
-        # Load NPZ file - images and labels are stored together
-        npz_file_path = os.path.join(images_path, file_path)
-        self.data = np.load(npz_file_path)
-        self.images = self.data['images']
-        self.labels = self.data['labels']
-        self.task_type = task_type
-        self.num_classes = num_classes
+    def __init__(self, dataset_name, images_path, file_path, augment, size=224, download=True):
+        # Determine split from file_path
+        if 'train' in file_path.lower():
+            split = 'train'
+        elif 'val' in file_path.lower():
+            split = 'val'
+        elif 'test' in file_path.lower():
+            split = 'test'
+        else:
+            # Default to train if ambiguous
+            split = 'train'
+            
+        # Get dataset info from MedMNIST INFO
+        dataset_key = dataset_name.lower()
+        if dataset_key not in INFO:
+            raise ValueError(f"Dataset {dataset_name} not found in MedMNIST INFO")
+            
+        self.dataset_info = INFO[dataset_key]
+        self.task_type = self.dataset_info['task']
+        self.num_classes = len(self.dataset_info['label'])
+        
+        # Get the dataset class from medmnist module
+        try:
+            DataClass = getattr(medmnist, dataset_name)
+        except AttributeError:
+            raise ValueError(f"Dataset class {dataset_name} not found in medmnist module")
+        
+        # Load dataset with proper split
+        self.dataset = DataClass(
+            split=split,
+            transform=None,  # We'll handle transforms in __getitem__
+            download=download,
+            root=images_path,  # Use your scratch directory
+            size=size  # Use 224x224 to match ARK expectations
+        )
+        
+        # Extract data for easier access
+        self.images = self.dataset.imgs
+        self.labels = self.dataset.labels
+        
+        # Store augmentation settings
         self.augment = augment
         self.train_augment = build_ts_transformations()
+        
+        print(f"✅ Loaded {dataset_name} {split} split: {len(self.images)} samples")
+        print(f"   Task: {self.task_type}, Classes: {self.num_classes}")
+        print(f"   Image shape: {self.images.shape if len(self.images) > 0 else 'N/A'}")
+        print(f"   Label shape: {self.labels.shape if len(self.labels) > 0 else 'N/A'}")
     
     def __getitem__(self, index):
-        image = self.images[index]
+        # Get image and label from MedMNIST dataset
+        image = self.images[index]  # Already 224x224x3 from MedMNIST with size=224
         label = self.labels[index]
         
-        # Convert grayscale to RGB if needed (MedMNIST images are 28x28 or 28x28x1)
-        if len(image.shape) == 2:  # Grayscale (28, 28)
-            image = np.stack([image, image, image], axis=-1)  # Convert to (28, 28, 3)
-        elif image.shape[-1] == 1:  # Grayscale with channel dim (28, 28, 1)
-            image = np.repeat(image, 3, axis=-1)  # Convert to (28, 28, 3)
-        
-        # Resize to 224x224 to match ARK's expected input size
-        image = cv2.resize(image, (224, 224))
-        
-        # Handle different label formats based on task type
+        # Handle different label formats based on task type (auto-detected from INFO)
         if self.task_type == 'multi-label':
             # Multi-label: labels are already binary vectors [0,1,0,1,...]
             imageLabel = torch.FloatTensor(label.astype(np.float32))
-        elif self.task_type in ['multi-class', 'ordinal regression']:
+        elif self.task_type in ['multi-class', 'ordinal']:
             # Multi-class/Ordinal: convert class index to one-hot encoding
             imageLabel = torch.zeros(self.num_classes)
-            imageLabel[int(label[0])] = 1.0
-        elif self.task_type == 'binary':
-            # Binary: convert to single float value
-            imageLabel = torch.FloatTensor([float(label[0])])
+            if isinstance(label, (list, np.ndarray)) and len(label) > 0:
+                imageLabel[int(label[0])] = 1.0
+            else:
+                imageLabel[int(label)] = 1.0
+        elif self.task_type == 'binary-class':
+            # Binary: already handled by multi-class logic above
+            imageLabel = torch.zeros(self.num_classes)
+            if isinstance(label, (list, np.ndarray)) and len(label) > 0:
+                imageLabel[int(label[0])] = 1.0
+            else:
+                imageLabel[int(label)] = 1.0
         else:
             # Default: treat as multi-class
             imageLabel = torch.zeros(self.num_classes)
-            imageLabel[int(label[0])] = 1.0
+            if isinstance(label, (list, np.ndarray)) and len(label) > 0:
+                imageLabel[int(label[0])] = 1.0
+            else:
+                imageLabel[int(label)] = 1.0
+        
+        # Ensure image is in correct format (should already be 224x224x3)
+        if len(image.shape) == 2:  # Grayscale
+            image = np.stack([image, image, image], axis=-1)
+        elif image.shape[-1] == 1:  # Grayscale with channel dim
+            image = np.repeat(image, 3, axis=-1)
         
         # Apply augmentations
         if self.augment is not None:
@@ -610,62 +658,62 @@ class BaseMedMNIST(Dataset):
 class PathMNIST(BaseMedMNIST):
     """PathMNIST: 9-class pathology tissue classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 9)
+        super().__init__('PathMNIST', images_path, file_path, augment)
 
 class ChestMNIST(BaseMedMNIST):
     """ChestMNIST: 14-label chest X-ray multi-label classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-label', 14)
+        super().__init__('ChestMNIST', images_path, file_path, augment)
 
 class DermaMNIST(BaseMedMNIST):
     """DermaMNIST: 7-class dermatology classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 7)
+        super().__init__('DermaMNIST', images_path, file_path, augment)
 
 class OCTMNIST(BaseMedMNIST):
     """OCTMNIST: 4-class OCT image classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 4)
+        super().__init__('OCTMNIST', images_path, file_path, augment)
 
 class PneumoniaMNIST(BaseMedMNIST):
     """PneumoniaMNIST: Binary pneumonia classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'binary', 2)
+        super().__init__('PneumoniaMNIST', images_path, file_path, augment)
 
 class RetinaMNIST(BaseMedMNIST):
     """RetinaMNIST: 5-level diabetic retinopathy ordinal regression"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'ordinal regression', 5)
+        super().__init__('RetinaMNIST', images_path, file_path, augment)
 
 class BreastMNIST(BaseMedMNIST):
     """BreastMNIST: Binary breast cancer classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'binary', 2)
+        super().__init__('BreastMNIST', images_path, file_path, augment)
 
 class BloodMNIST(BaseMedMNIST):
     """BloodMNIST: 8-class blood cell classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 8)
+        super().__init__('BloodMNIST', images_path, file_path, augment)
 
 class TissueMNIST(BaseMedMNIST):
     """TissueMNIST: 8-class kidney tissue classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 8)
+        super().__init__('TissueMNIST', images_path, file_path, augment)
 
 class OrganAMNIST(BaseMedMNIST):
     """OrganAMNIST: 11-class abdominal organ classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 11)
+        super().__init__('OrganAMNIST', images_path, file_path, augment)
 
 class OrganCMNIST(BaseMedMNIST):
     """OrganCMNIST: 11-class coronary organ classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 11)
+        super().__init__('OrganCMNIST', images_path, file_path, augment)
 
 class OrganSMNIST(BaseMedMNIST):
     """OrganSMNIST: 11-class sagittal organ classification"""
     def __init__(self, images_path, file_path, augment):
-        super().__init__(images_path, file_path, augment, 'multi-class', 11)
+        super().__init__('OrganSMNIST', images_path, file_path, augment)
 
 # ===================================================================
 # DATASET LOADER DICTIONARY - MODIFIED FOR MEDMNIST-ONLY TRAINING

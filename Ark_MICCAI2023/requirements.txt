@@ -26,8 +26,7 @@ pydicom>=2.2.0
 scikit-image>=0.18.0
 
 # MedMNIST dataset support
-# Note: Install medmnist when available
-# medmnist>=2.0.0
+medmnist>=2.2.0
 
 # Optional: For better performance
 # tensorboard>=2.7.0  # For logging (if needed)
