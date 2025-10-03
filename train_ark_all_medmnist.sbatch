@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=256G
 #SBATCH --gres=gpu:1
-#SBATCH --partition=gpu
+#SBATCH --partition=general
 
 # Create logs directory if it doesn't exist
 mkdir -p logs

@@ -5,7 +5,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=8G
-#SBATCH --partition=cpu
+#SBATCH --partition=general
 
 # Set number of cores for compilation
 export CMAKE_BUILD_PARALLEL_LEVEL=8
