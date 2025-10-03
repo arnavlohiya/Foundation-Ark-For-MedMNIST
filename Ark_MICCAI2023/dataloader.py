@@ -71,7 +71,7 @@ def build_transform_classification(normalize, crop_size=224, resize=256, mode="t
 
 def build_ts_transformations():
     AUGMENTATIONS = Compose([
-      RandomResizedCrop(height=224, width=224),
+      RandomResizedCrop(size=(224, 224)),
       ShiftScaleRotate(rotate_limit=10),
       OneOf([
           RandomBrightnessContrast(),
