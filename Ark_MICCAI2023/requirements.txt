@@ -1,6 +1,6 @@
 # ===================================================================
 # ARK MEDMNIST REQUIREMENTS - PYTHON 3.6 COMPATIBLE
-# Dependencies for ARK framework with MedMNIST dataset support
+# Only packages actually used by the codebase
 # ===================================================================
 
 # Core PyTorch ecosystem
@@ -14,16 +14,11 @@ timm>=0.4.0
 
 # Image processing and augmentation
 albumentations>=1.0.0
-opencv-python>=4.2.0
 Pillow>=7.0.0
 
 # Data handling
 PyYAML>=5.3.0
 tqdm>=4.50.0
-pydicom>=2.0.0
-
-# Image processing dependencies
-scikit-image>=0.17.0
 
 # MedMNIST dataset support
 medmnist>=2.0.0

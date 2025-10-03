@@ -12,9 +12,8 @@ import numpy as np
 # MEDMNIST MODIFICATION: Import official MedMNIST library for proper data loading
 import medmnist
 from medmnist import INFO
-import pydicom as dicom
-import cv2
-from skimage import transform, io, img_as_float, exposure
+# Removed unused imports: pydicom, cv2, skimage
+# These were not used anywhere in the MedMNIST implementation
 from albumentations import (
     Compose, HorizontalFlip, CLAHE, HueSaturationValue,
     RandomBrightness, RandomBrightnessContrast, RandomGamma,OneOf,
