@@ -15,11 +15,8 @@ from medmnist import INFO
 # Removed unused imports: pydicom, cv2, skimage
 # These were not used anywhere in the MedMNIST implementation
 from albumentations import (
-    Compose, HorizontalFlip, CLAHE, HueSaturationValue,
-    RandomBrightnessContrast, RandomGamma, OneOf,
-    ToFloat, ShiftScaleRotate, GridDistortion, ElasticTransform, JpegCompression,
-    RGBShift, Blur, MotionBlur, MedianBlur, GaussNoise, CenterCrop,
-    GaussNoise, OpticalDistortion, RandomResizedCrop, Normalize
+    Compose, RandomResizedCrop, ShiftScaleRotate, OneOf,
+    RandomBrightnessContrast, RandomGamma, HueSaturationValue
 )
 from albumentations.pytorch import ToTensorV2
 
