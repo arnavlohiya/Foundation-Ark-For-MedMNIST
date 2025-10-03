@@ -16,10 +16,10 @@ from medmnist import INFO
 # These were not used anywhere in the MedMNIST implementation
 from albumentations import (
     Compose, HorizontalFlip, CLAHE, HueSaturationValue,
-    RandomBrightness, RandomBrightnessContrast, RandomGamma,OneOf,
-    ToFloat, ShiftScaleRotate,GridDistortion, ElasticTransform, JpegCompression, HueSaturationValue,
-    RGBShift, RandomBrightness, RandomContrast, Blur, MotionBlur, MedianBlur, GaussNoise,CenterCrop,
-    IAAAdditiveGaussianNoise,GaussNoise,OpticalDistortion,RandomSizedCrop, RandomResizedCrop, Normalize
+    RandomBrightnessContrast, RandomGamma, OneOf,
+    ToFloat, ShiftScaleRotate, GridDistortion, ElasticTransform, JpegCompression,
+    RGBShift, Blur, MotionBlur, MedianBlur, GaussNoise, CenterCrop,
+    GaussNoise, OpticalDistortion, RandomResizedCrop, Normalize
 )
 from albumentations.pytorch import ToTensorV2
 
