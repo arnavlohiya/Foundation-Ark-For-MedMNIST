@@ -7,6 +7,15 @@ This script trains on only 3 datasets for 1 epoch to enable fast debugging.
 import os
 import sys
 import argparse
+import torch
+import torchvision
+import numpy as np
+import medmnist
+import albumentations
+import timm
+import sklearn
+import yaml
+from tqdm import tqdm
 
 # Add the Ark_MICCAI2023 directory to Python path
 sys.path.append('./Ark_MICCAI2023')
