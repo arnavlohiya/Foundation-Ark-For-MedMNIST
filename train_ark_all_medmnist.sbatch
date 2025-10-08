@@ -33,7 +33,7 @@ python main_ark.py \
     --data_set OrganSMNIST \
     --data_set RetinaMNIST \
     --data_set ChestMNIST \
-    --model vit_base \
+    --model swin_base \
     --init ImageNet_1k \
     --epochs 200 \
     --batch_size 32 \
