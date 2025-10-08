@@ -62,8 +62,11 @@ def build_omni_model_from_checkpoint(args, num_classes_list, key):
     return model
 
 def build_omni_model(args, num_classes_list):
+    model = None
     if args.model_name == "swin_base": #swin_base_patch4_window7_224
         model = ArkSwinTransformer(num_classes_list, args.projector_features, args.use_mlp, patch_size=4, window_size=7, embed_dim=128, depths=(2, 2, 18, 2), num_heads=(4, 8, 16, 32))
+    else:
+        raise ValueError(f"Unsupported model name: {args.model_name}")
 
     if args.pretrained_weights is not None:
         if args.pretrained_weights.startswith('https'):

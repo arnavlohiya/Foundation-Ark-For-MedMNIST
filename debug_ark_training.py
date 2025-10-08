@@ -37,7 +37,7 @@ def create_debug_args():
             # Training parameters - minimal for debugging
             self.epochs = 1
             self.pretrain_epochs = 1
-            self.batch_size = 8  # Smaller batch size for debugging
+            self.batch_size = 4  # Even smaller batch size for debugging
             self.img_size = 224
             self.img_depth = 3
             
