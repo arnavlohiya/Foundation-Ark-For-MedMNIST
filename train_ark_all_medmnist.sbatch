@@ -10,7 +10,7 @@
 
 module load mamba/latest
 # Create logs directory if it doesn't exist
-mkdir -p logs
+mkdir -p logsin
 
 echo "Starting Ark unified training on all 12 MedMNIST datasets at $(date)"
 echo "Job ID: $SLURM_JOB_ID"
@@ -21,7 +21,18 @@ cd Ark_MICCAI2023
 
 # Train one unified model on all 12 MedMNIST datasets simultaneously
 python main_ark.py \
-    --dataset_list PneumoniaMNIST BreastMNIST PathMNIST DermaMNIST OCTMNIST BloodMNIST TissueMNIST OrganAMNIST OrganCMNIST OrganSMNIST RetinaMNIST ChestMNIST \
+    --data_set PneumoniaMNIST \
+    --data_set BreastMNIST \
+    --data_set PathMNIST \
+    --data_set DermaMNIST \
+    --data_set OCTMNIST \
+    --data_set BloodMNIST \
+    --data_set TissueMNIST \
+    --data_set OrganAMNIST \
+    --data_set OrganCMNIST \
+    --data_set OrganSMNIST \
+    --data_set RetinaMNIST \
+    --data_set ChestMNIST \
     --model swin_base \
     --init ImageNet_1k \
     --epochs 200 \
