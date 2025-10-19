@@ -4,7 +4,7 @@
 #SBATCH --error=logs/ark_training_%j.err
 #SBATCH --time=72:00:00
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=general
 

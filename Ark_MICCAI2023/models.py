@@ -32,6 +32,7 @@ class ArkSwinTransformer(swin.SwinTransformer):
 
     def forward(self, x, head_n=None):
         x = self.forward_features(x)
+        x = self.forward_head(x, pre_logits=True)  # Apply global average pooling
         if self.projector:
             x = self.projector(x)
         if head_n is not None:
@@ -41,6 +42,7 @@ class ArkSwinTransformer(swin.SwinTransformer):
 
     def generate_embeddings(self, x, after_proj = True):
         x = self.forward_features(x)
+        x = self.forward_head(x, pre_logits=True)  # Apply global average pooling
         if after_proj:
             x = self.projector(x)
         return x
